@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Register — Crypto School{% endblock %}
+
+{% block content %}
+<div class="card">
+
+    <h1>🔐 Crypto School</h1>
+    <p class="subtitle">Create your encrypted account</p>
+
+    <!-- ── Django messages (errors / success) ──────── -->
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <!-- tag is either 'error' or 'success' — maps to CSS class -->
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Registration form ───────────────────────── -->
+    <!-- action="" means POST to same URL /register/   -->
+    <!-- method="POST" sends data in request body      -->
+    <form action="" method="POST">
+
+        <!-- CSRF token — Django requires this for all POST forms -->
+        <!-- Prevents cross-site request forgery attacks          -->
+        {% csrf_token %}
+
+        <!-- Full Name -->
+        <div class="form-group">
+            <label for="full_name">Full Name</label>
+            <input
+                type="text"
+                id="full_name"
+                name="full_name"
+                placeholder="John Doe"
+                required
+            >
+        </div>
+
+        <!-- Username -->
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="johndoe"
+                required
+            >
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="john@example.com"
+                required
+            >
+        </div>
+
+        <!-- Phone (optional) -->
+        <div class="form-group">
+            <label for="phone">Phone (optional)</label>
+            <input
+                type="text"
+                id="phone"
+                name="phone"
+                placeholder="+880..."
+            >
+        </div>
+
+        <!-- Role selector — admin is excluded intentionally -->
+        <div class="form-group">
+            <label for="role">Role</label>
+            <select id="role" name="role" required>
+                <option value="">— Select Role —</option>
+                <option value="student">Student</option>
+                <option value="parent">Parent</option>
+                <!-- Teacher registers but needs approval -->
+                <option value="teacher">Teacher (requires approval)</option>
+            </select>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                required
+            >
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                placeholder="••••••••"
+                required
+            >
+        </div>
+
+        <button type="submit" class="btn">Create Encrypted Account</button>
+
+    </form>
+
+    <div class="footer-link">
+        Already have an account? <a href="{% url 'login' %}">Log in</a>
+    </div>
+
+</div>
+{% endblock %}

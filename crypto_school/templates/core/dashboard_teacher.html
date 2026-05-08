@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Welcome ───────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👋 Welcome, {{ profile.full_name|default:user.username }}</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">
+            Teacher Dashboard
+            {% if not user.profile_complete %}
+            — <a href="{% url 'update_profile' %}" style="color:#f0a050;">
+                ⚠ Complete your profile
+            </a>
+            {% endif %}
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <a href="{% url 'add_result' %}"      class="btn btn-sm">📝 Add Result</a>
+            <a href="{% url 'update_profile' %}"  class="btn btn-sm">✏ Edit Profile</a>
+            <a href="{% url 'post_list' %}" class="btn btn-sm">📝 Posts</a>           
+            <a href="{% url 'key_management' %}"  class="btn btn-sm">🔑 My Keys</a>
+        </div>
+    </div>
+
+    <!-- ── Profile ───────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔐 My Profile</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Full Name</label>
+                <p>{{ profile.full_name|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Subject</label>
+                <p>{{ profile.subject|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Qualification</label>
+                <p>{{ profile.qualification|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Phone</label>
+                <p>{{ profile.phone|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Address</label>
+                <p>{{ profile.address|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Key Version</label>
+                <p style="color:#7b8cde;">v{{ user.key_version }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Assigned Classes ──────────────────────────── -->
+    <div class="dash-card">
+        <h2>📚 My Assigned Classes</h2>
+        {% if assignments %}
+        <table>
+            <tr>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Assigned</th>
+                <th></th>
+            </tr>
+            {% for a in assignments %}
+            <tr>
+                <td>{{ a.assigned_class.class_name }}</td>
+                <td>{{ a.assigned_class.section }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ a.assigned_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <a href="{% url 'teacher_class_detail' a.assigned_class.id %}"
+                       class="btn btn-sm">View →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No classes assigned yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

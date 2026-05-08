@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+{% block title %}Parent Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Welcome ───────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👋 Welcome, {{ profile.full_name|default:user.username }}</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">
+            Parent Dashboard
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <a href="{% url 'submit_parent_request' %}" class="btn btn-sm">📤 Request Access</a>
+            <a href="{% url 'view_shared_data' %}"      class="btn btn-sm">🔓 Shared Data</a>
+            <a href="{% url 'update_profile' %}"        class="btn btn-sm">✏ Edit Profile</a>
+            <a href="{% url 'key_management' %}"        class="btn btn-sm">🔑 My Keys</a>
+        </div>
+    </div>
+
+    <!-- ── Profile ───────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔐 My Profile</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Full Name</label>
+                <p>{{ profile.full_name|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Email</label>
+                <p>{{ profile.email|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Phone</label>
+                <p>{{ profile.phone|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Occupation</label>
+                <p>{{ profile.occupation|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Key Version</label>
+                <p style="color:#7b8cde;">v{{ user.key_version }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Child Access Status ───────────────────────── -->
+    <div class="dash-card">
+        <h2>👧 Child Access Requests</h2>
+        {% if parent_requests %}
+        <table>
+            <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th></th>
+            </tr>
+            {% for req in parent_requests %}
+            <tr>
+                <td>
+                    <span class="badge badge-student">
+                        {{ req.student.username }}
+                    </span>
+                </td>
+                <td>
+                    {% if req.status == 'pending' %}
+                        <span style="color:#f0c080;">⏳ Pending</span>
+                    {% elif req.status == 'approved' %}
+                        <span style="color:#80f080;">✅ Approved</span>
+                    {% else %}
+                        <span style="color:#f08080;">❌ Rejected</span>
+                    {% endif %}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ req.created_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    {% if req.status == 'approved' %}
+                    <a href="{% url 'view_shared_data' %}"
+                       class="btn btn-sm btn-success">
+                        View Data →
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">
+            No requests yet.
+            <a href="{% url 'submit_parent_request' %}"
+               style="color:#7b8cde;">
+                Submit one →
+            </a>
+        </p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'core/base.html' %}
+{% block title %}Create Post{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+<div class="card" style="max-width:640px;">
+
+    <h1>✏ Create Post</h1>
+    <p class="subtitle">
+        Content encrypted with your RSA public key + ECC signed
+    </p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="POST" action="{% url 'create_post' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Title *</label>
+            <input type="text" name="title"
+                   placeholder="Post title" required>
+        </div>
+
+        <div class="form-group">
+            <label>Content *</label>
+            <textarea name="content"
+                      placeholder="Write your post content here..."
+                      required
+                      style="
+                          width:100%;
+                          min-height:160px;
+                          padding:0.6rem 0.8rem;
+                          background:#0f0f1a;
+                          border:1px solid #2a2a4a;
+                          border-radius:6px;
+                          color:#e0e0e0;
+                          font-size:0.95rem;
+                          outline:none;
+                          resize:vertical;
+                          font-family:'Segoe UI', sans-serif;
+                      "></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Visibility</label>
+            <select name="visibility">
+                <option value="public">Everyone</option>
+                <option value="teachers">Teachers Only</option>
+                <option value="students">Students Only</option>
+                <option value="parents">Parents Only</option>
+                {% if user.role == 'admin' %}
+                <option value="admin">Admin Only</option>
+                {% endif %}
+            </select>
+        </div>
+
+        <div style="
+            background:#0a0f1a;
+            border:1px solid #1a2a3a;
+            border-radius:6px;
+            padding:0.8rem;
+            margin-bottom:1rem;
+            font-size:0.8rem;
+            color:#80c0f0;
+        ">
+            🔐 Content will be RSA encrypted before saving.<br>
+            🖊 Post will be ECC signed to prove authorship.<br>
+            🔒 HMAC attached for integrity verification.
+        </div>
+
+        <button type="submit" class="btn btn-full">
+            🔐 Publish Encrypted Post
+        </button>
+    </form>
+
+    <div class="footer-link">
+        <a href="{% url 'post_list' %}">← Back to Posts</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

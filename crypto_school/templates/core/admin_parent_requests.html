@@ -1,0 +1,147 @@
+{% extends 'core/base.html' %}
+{% block title %}Parent Requests — Admin{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center;">
+            <h2 style="border:none; padding:0;">
+                📬 Parent Access Requests
+            </h2>
+            <a href="{% url 'dashboard_admin' %}" class="btn btn-sm">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% for item in requests %}
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:flex-start; flex-wrap:wrap; gap:0.5rem;
+                    margin-bottom:1rem;">
+            <div>
+                <p style="font-size:0.9rem; color:#ddd;">
+                    <span class="badge badge-parent">
+                        {{ item.req.parent.username }}
+                    </span>
+                    <span style="color:#666; margin:0 0.5rem;">→</span>
+                    <span class="badge badge-student">
+                        {{ item.req.student.username }}
+                    </span>
+                </p>
+                <p style="color:#666; font-size:0.78rem; margin-top:0.3rem;">
+                    Submitted {{ item.req.created_at|date:"M d, Y H:i" }}
+                </p>
+            </div>
+            <div>
+                {% if item.req.status == 'pending' %}
+                    <span style="color:#f0c080;">⏳ Pending</span>
+                {% elif item.req.status == 'approved' %}
+                    <span style="color:#80f080;">✅ Approved</span>
+                {% else %}
+                    <span style="color:#f08080;">❌ Rejected</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Decrypted message from parent -->
+        <div style="
+            background:#0a0f1a;
+            border:1px solid #1a2a3a;
+            border-radius:6px;
+            padding:0.8rem;
+            margin-bottom:1rem;
+        ">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.3rem;">
+                🔓 Decrypted Message (admin's RSA private key)
+            </p>
+            <p style="color:#ddd; font-size:0.9rem;">
+                {{ item.message }}
+            </p>
+            <p style="margin-top:0.4rem; font-size:0.72rem;">
+                {% if item.hmac_valid %}
+                    <span style="color:#80f080;">
+                        ✅ HMAC Valid — message not tampered
+                    </span>
+                {% else %}
+                    <span style="color:#f08080;">
+                        ❌ HMAC Failed — message may be tampered!
+                    </span>
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- ID Card -->
+        {% if item.req.id_card_image %}
+        <div style="margin-bottom:1rem;">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.5rem;">
+                🪪 Student ID Card (uploaded by parent)
+            </p>
+            <img src="{{ item.req.id_card_image.url }}"
+                 style="max-width:300px; border-radius:6px;
+                        border:1px solid #2a2a4a;">
+        </div>
+        {% else %}
+        <p style="color:#f08080; font-size:0.82rem; margin-bottom:1rem;">
+            ⚠ No ID card uploaded
+        </p>
+        {% endif %}
+        
+
+        <!-- Action form — only show for pending requests -->
+        {% if item.req.status == 'pending' %}
+        <form method="POST"
+              action="{% url 'approve_parent_request' item.req.id %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Admin Note (optional)</label>
+                <input type="text" name="admin_note"
+                       placeholder="Add a note for the parent">
+            </div>
+
+            <div style="display:flex; gap:0.8rem;">
+                <button type="submit" name="action" value="approve"
+                        class="btn btn-sm btn-success">
+                    ✅ Approve & Share Data
+                </button>
+                <button type="submit" name="action" value="reject"
+                        class="btn btn-sm btn-danger"
+                        onclick="return confirm('Reject this request?')">
+                    ❌ Reject
+                </button>
+            </div>
+        </form>
+
+        {% else %}
+        <!-- Already processed -->
+        <p style="color:#666; font-size:0.82rem;">
+            Processed by {{ item.req.processed_by.username }}
+            on {{ item.req.processed_at|date:"M d, Y H:i" }}
+            {% if item.req.admin_note %}
+                — "{{ item.req.admin_note }}"
+            {% endif %}
+        </p>
+        {% endif %}
+
+    </div>
+    {% empty %}
+    <div class="dash-card">
+        <p style="color:#666;">No parent requests yet.</p>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

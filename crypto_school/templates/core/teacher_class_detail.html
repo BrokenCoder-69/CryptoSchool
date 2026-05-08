@@ -1,0 +1,76 @@
+{% extends 'core/base.html' %}
+{% block title %}My Class — Teacher{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center;">
+            <h2 style="border:none; padding:0; font-size:1.4rem;">
+                📚 {{ cls.class_name }} — {{ cls.section }}
+            </h2>
+            <a href="{% url 'dashboard_teacher' %}" class="btn btn-sm">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Other Teachers ────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👨‍🏫 Other Teachers in This Class</h2>
+        {% if other_teachers %}
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Assigned</th>
+            </tr>
+            {% for ot in other_teachers %}
+            <tr>
+                <td>
+                    <span class="badge badge-teacher">
+                        {{ ot.teacher.username }}
+                    </span>
+                </td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ ot.assigned_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">You are the only teacher in this class.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Students ──────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🎓 Students ({{ student_data|length }})</h2>
+        {% if student_data %}
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Enrolled</th>
+            </tr>
+            {% for s in student_data %}
+            <tr>
+                <td>
+                    <span class="badge badge-student">
+                        {{ s.username }}
+                    </span>
+                </td>
+                <td>{{ s.full_name }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ s.enrolled_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No students enrolled yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

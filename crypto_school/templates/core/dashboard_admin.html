@@ -1,0 +1,271 @@
+{% extends 'core/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header ────────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🛡 Admin Dashboard</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">
+            Welcome back, {{ request.session.username }}
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <a href="{% url 'admin_parent_requests' %}" class="btn btn-sm">📬 Parent Requests</a>
+            <a href="{% url 'all_classes' %}"          class="btn btn-sm">📚 All Classes</a>
+            <a href="{% url 'admin_key_logs' %}"       class="btn btn-sm">🔑 Key Logs</a>
+            <a href="{% url 'encryption_audit' %}"     class="btn btn-sm">🔬 Audit</a>
+            <a href="{% url 'key_management' %}"       class="btn btn-sm">🔄 My Keys</a>
+            <a href="{% url 'admin_sessions' %}" class="btn btn-sm">
+                🔒 Sessions
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Stats ─────────────────────────────────────── -->
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="num">{{ all_teachers.count }}</div>
+            <div class="label">Teachers</div>
+        </div>
+        <div class="stat-box">
+            <div class="num">{{ all_students.count }}</div>
+            <div class="label">Students</div>
+        </div>
+        <div class="stat-box">
+            <div class="num">{{ all_parents.count }}</div>
+            <div class="label">Parents</div>
+        </div>
+        <div class="stat-box">
+            <div class="num">{{ all_classes.count }}</div>
+            <div class="label">Classes</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" style="color:#f0a050;">
+                {{ pending_teachers.count }}
+            </div>
+            <div class="label">Pending Teachers</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" style="color:#80c0f0;">
+                {{ pending_requests_count }}
+            </div>
+            <div class="label">Pending Requests</div>
+        </div>
+    </div>
+
+    <!-- ── Pending Teacher Approvals ─────────────────── -->
+    {% if pending_teachers %}
+    <div class="dash-card">
+        <h2>⏳ Pending Teacher Approvals</h2>
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Registered</th>
+                <th>Action</th>
+            </tr>
+            {% for teacher in pending_teachers %}
+            <tr>
+                <td>{{ teacher.username }}</td>
+                <td>{{ teacher.email }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ teacher.created_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <form method="POST"
+                          action="{% url 'approve_teacher' teacher.id %}"
+                          style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success">
+                            ✓ Approve
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- ── Create Class ───────────────────────────────── -->
+    <div class="dash-card">
+        <h2>➕ Create Class</h2>
+        <form method="POST" action="{% url 'create_class' %}"
+              style="display:flex; gap:1rem;
+                     align-items:flex-end; flex-wrap:wrap;">
+            {% csrf_token %}
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                <label>Class Name</label>
+                <input type="text" name="class_name"
+                       placeholder="e.g. Grade 10">
+            </div>
+            <div class="form-group" style="margin:0; flex:1; min-width:100px;">
+                <label>Section</label>
+                <input type="text" name="section" placeholder="e.g. A">
+            </div>
+            <button type="submit" class="btn btn-sm">Create</button>
+        </form>
+    </div>
+
+    <!-- ── Assign Teacher ────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👨‍🏫 Assign Teacher to Class</h2>
+        <form method="POST" action="{% url 'assign_teacher' %}"
+              style="display:flex; gap:1rem;
+                     align-items:flex-end; flex-wrap:wrap;">
+            {% csrf_token %}
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                <label>Teacher</label>
+                <select name="teacher_id">
+                    <option value="">— Select Teacher —</option>
+                    {% for t in all_teachers %}
+                    <option value="{{ t.id }}">{{ t.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                <label>Class</label>
+                <select name="class_id">
+                    <option value="">— Select Class —</option>
+                    {% for c in all_classes %}
+                    <option value="{{ c.id }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-sm">Assign</button>
+        </form>
+    </div>
+
+    <!-- ── Enroll Student ────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🎓 Enroll Student in Class</h2>
+        <form method="POST" action="{% url 'enroll_student' %}"
+              style="display:flex; gap:1rem;
+                     align-items:flex-end; flex-wrap:wrap;">
+            {% csrf_token %}
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                <label>Student</label>
+                <select name="student_id">
+                    <option value="">— Select Student —</option>
+                    {% for s in all_students %}
+                    <option value="{{ s.id }}">{{ s.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin:0; flex:1; min-width:150px;">
+                <label>Class</label>
+                <select name="class_id">
+                    <option value="">— Select Class —</option>
+                    {% for c in all_classes %}
+                    <option value="{{ c.id }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-sm">Enroll</button>
+        </form>
+    </div>
+
+    <!-- ── All Classes summary ───────────────────────── -->
+    <div class="dash-card">
+        <h2>
+            📚 Classes
+            <a href="{% url 'all_classes' %}" class="btn btn-sm"
+               style="float:right; margin-top:-0.3rem;">
+                Full Overview →
+            </a>
+        </h2>
+        {% if all_classes %}
+        <table>
+            <tr>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+            {% for c in all_classes %}
+            <tr>
+                <td>{{ c.class_name }}</td>
+                <td>{{ c.section }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ c.created_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <a href="{% url 'class_detail' c.id %}"
+                       class="btn btn-sm">View →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No classes yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── All Users ──────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👥 All Users</h2>
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Approved</th>
+                <th>Keys</th>
+                <th>Joined</th>
+            </tr>
+            {% for u in all_teachers %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td style="color:#888; font-size:0.82rem;">{{ u.email }}</td>
+                <td><span class="badge badge-teacher">teacher</span></td>
+                <td style="color:#80f080;">✅</td>
+                <td style="font-size:0.75rem; color:#666;">
+                    {% if u.keys_encrypted %}🔐 v{{ u.key_version }}{% else %}⚠ plain{% endif %}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ u.created_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+            {% for u in all_students %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td style="color:#888; font-size:0.82rem;">{{ u.email }}</td>
+                <td><span class="badge badge-student">student</span></td>
+                <td style="color:#80f080;">✅</td>
+                <td style="font-size:0.75rem; color:#666;">
+                    {% if u.keys_encrypted %}🔐 v{{ u.key_version }}{% else %}⚠ plain{% endif %}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ u.created_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+            {% for u in all_parents %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td style="color:#888; font-size:0.82rem;">{{ u.email }}</td>
+                <td><span class="badge badge-parent">parent</span></td>
+                <td style="color:#80f080;">✅</td>
+                <td style="font-size:0.75rem; color:#666;">
+                    {% if u.keys_encrypted %}🔐 v{{ u.key_version }}{% else %}⚠ plain{% endif %}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ u.created_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+{% endblock %}

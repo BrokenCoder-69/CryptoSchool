@@ -1,0 +1,114 @@
+{% extends 'core/base.html' %}
+{% block title %}Shared Student Data{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <div class="dash-card">
+        <h2>🔓 Shared Student Data</h2>
+        <p style="color:#888; font-size:0.82rem;">
+            Data decrypted with your RSA private key.
+            Each share is ECC signed by admin and HMAC verified.
+        </p>
+    </div>
+
+    {% if decrypted_items %}
+        {% for item in decrypted_items %}
+        <div class="dash-card">
+
+            <h2 style="border:none; padding:0; margin-bottom:0.5rem;">
+                👤 {{ item.student_name }}
+                <span style="color:#666; font-size:0.8rem;
+                             font-weight:400;">
+                    ({{ item.student_username }})
+                </span>
+            </h2>
+            <p style="color:#666; font-size:0.78rem; margin-bottom:1rem;">
+                Shared on {{ item.shared_at|date:"M d, Y" }}
+                {% if item.request_note %}
+                    | Admin note: "{{ item.request_note }}"
+                {% endif %}
+            </p>
+
+            <!-- Integrity badges -->
+            <div style="display:flex; gap:0.8rem; margin-bottom:1rem;
+                        flex-wrap:wrap;">
+                <span style="font-size:0.75rem; padding:0.2rem 0.6rem;
+                             border-radius:4px;
+                             {% if item.hmac_valid %}
+                             background:#0a1a0a; color:#80f080;
+                             border:1px solid #1a3a1a;
+                             {% else %}
+                             background:#1a0a0a; color:#f08080;
+                             border:1px solid #3a1a1a;
+                             {% endif %}">
+                    {% if item.hmac_valid %}
+                        ✅ HMAC Valid
+                    {% else %}
+                        ❌ HMAC Failed
+                    {% endif %}
+                </span>
+
+                <span style="font-size:0.75rem; padding:0.2rem 0.6rem;
+                             border-radius:4px;
+                             {% if item.sig_valid %}
+                             background:#0a0f1a; color:#80c0f0;
+                             border:1px solid #1a2a3a;
+                             {% else %}
+                             background:#1a1a0a; color:#f0f080;
+                             border:1px solid #3a3a1a;
+                             {% endif %}">
+                    {% if item.sig_valid %}
+                        ✅ Admin ECC Signature Valid
+                    {% else %}
+                        ⚠ ECC Signature unverified
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Results -->
+            <p style="color:#7b8cde; font-size:0.78rem;
+                      text-transform:uppercase; margin-bottom:0.5rem;">
+                📊 Academic Results
+            </p>
+
+            {% if item.student_results %}
+            <table>
+                <tr>
+                    <th>Subject</th>
+                    <th>Exam Type</th>
+                    <th>Academic Year</th>
+                </tr>
+                {% for r in item.student_results %}
+                <tr>
+                    <td>{{ r.subject }}</td>
+                    <td>{{ r.exam_type }}</td>
+                    <td style="color:#666;">{{ r.academic_year }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <p style="color:#666; font-size:0.75rem; margin-top:0.5rem;">
+                Note: Actual marks are encrypted with the student's key.
+                Only the student can see their marks.
+            </p>
+            {% else %}
+            <p style="color:#666;">No results available yet.</p>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+    <div class="dash-card">
+        <p style="color:#666;">
+            No approved shared data yet.
+            <a href="{% url 'submit_parent_request' %}"
+               style="color:#7b8cde;">
+                Submit a request →
+            </a>
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends 'core/base.html' %}
+{% block title %}Session Security{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header ────────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔒 Session Security</h2>
+        <p style="color:#888; font-size:0.85rem;">
+            All sessions are ECC-signed and fingerprinted.
+            Sessions expire after 30 minutes of inactivity.
+        </p>
+    </div>
+
+    <!-- ── Active Sessions ───────────────────────────── -->
+    <div class="dash-card">
+        <h2>📱 Active Sessions</h2>
+        {% if active_sessions %}
+        <table>
+            <tr>
+                <th>Device</th>
+                <th>IP Address</th>
+                <th>Last Activity</th>
+                <th>Expires</th>
+                <th>Action</th>
+            </tr>
+            {% for s in active_sessions %}
+            <tr {% if s.token_hash == current_hash %}
+                style="background:#0a1a0a;"
+                {% endif %}>
+                <td>
+                    {{ s.device_label }}
+                    {% if s.token_hash == current_hash %}
+                    <span style="color:#80f080; font-size:0.72rem;">
+                        ← current
+                    </span>
+                    {% endif %}
+                </td>
+                <td style="font-family:monospace; font-size:0.8rem;
+                           color:#888;">
+                    {{ s.ip_address }}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ s.last_activity|date:"M d, Y H:i" }}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ s.expires_at|date:"H:i" }}
+                </td>
+                <td>
+                    {% if s.token_hash != current_hash %}
+                    <!-- Can only terminate OTHER sessions -->
+                    <form method="POST"
+                          action="{% url 'terminate_session' s.id %}"
+                          onsubmit="return confirm('Terminate this session?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-danger">
+                            ✕ Terminate
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="color:#666; font-size:0.78rem;">
+                        current
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No active sessions found.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Security Info ─────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔐 Session Security Info</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Token Type</label>
+                <p>ECC Signed (ECDSA)</p>
+            </div>
+            <div class="info-item">
+                <label>Expiry Policy</label>
+                <p>30 min inactivity (sliding)</p>
+            </div>
+            <div class="info-item">
+                <label>Fingerprinting</label>
+                <p>IP + User Agent (SHA-256)</p>
+            </div>
+            <div class="info-item">
+                <label>Concurrent Sessions</label>
+                <p>Not allowed — new login terminates old</p>
+            </div>
+            <div class="info-item">
+                <label>Token Storage</label>
+                <p>Hashed in DB (SHA-256)</p>
+            </div>
+            <div class="info-item">
+                <label>Hijack Detection</label>
+                <p>Fingerprint mismatch → auto terminate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Activity Log ──────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📋 Session Activity Log</h2>
+        {% if activity_logs %}
+        <table>
+            <tr>
+                <th>Event</th>
+                <th>IP</th>
+                <th>Note</th>
+                <th>Time</th>
+            </tr>
+            {% for log in activity_logs %}
+            <tr>
+                <td>
+                    {% if log.event == 'login' %}
+                        <span style="color:#80f080;">🔓 login</span>
+                    {% elif log.event == 'logout' %}
+                        <span style="color:#888;">🔒 logout</span>
+                    {% elif log.event == 'expired' %}
+                        <span style="color:#f0c080;">⏱ expired</span>
+                    {% elif log.event == 'hijack' %}
+                        <span style="color:#f08080;">⚠ hijack attempt</span>
+                    {% elif log.event == 'concurrent' %}
+                        <span style="color:#c080f0;">
+                            🔄 concurrent terminated
+                        </span>
+                    {% else %}
+                        <span style="color:#888;">{{ log.event }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-family:monospace; font-size:0.75rem;
+                           color:#666;">
+                    {{ log.ip_address|default:"—" }}
+                </td>
+                <td style="color:#888; font-size:0.78rem;">
+                    {{ log.note }}
+                </td>
+                <td style="color:#666; font-size:0.75rem;">
+                    {{ log.timestamp|date:"M d, Y H:i" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No session activity yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

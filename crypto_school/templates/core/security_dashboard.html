@@ -1,0 +1,261 @@
+{% extends 'core/base.html' %}
+{% block title %}Security Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header ────────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🛡 Security Dashboard</h2>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;
+                    margin-top:0.8rem;">
+            <a href="{% url 'change_password' %}"  class="btn btn-sm">
+                🔑 Change Password
+            </a>
+            <a href="{% url 'key_management' %}"   class="btn btn-sm">
+                🔄 Rotate Keys
+            </a>
+            <a href="{% url 'session_dashboard' %}" class="btn btn-sm">
+                🔒 Sessions
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Security Status ───────────────────────────── -->
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="num" style="
+                {% if user.keys_encrypted %}color:#80f080;
+                {% else %}color:#f08080;{% endif %}
+            ">
+                {% if user.keys_encrypted %}✅{% else %}❌{% endif %}
+            </div>
+            <div class="label">Keys Encrypted</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" style="color:#7b8cde;">
+                v{{ user.key_version }}
+            </div>
+            <div class="label">Key Version</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" style="color:#80f080;">
+                {{ active_sessions }}
+            </div>
+            <div class="label">Active Sessions</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" style="
+                {% if login_attempt and login_attempt.is_locked %}
+                    color:#f08080;
+                {% else %}color:#80f080;{% endif %}
+            ">
+                {% if login_attempt and login_attempt.is_locked %}
+                    🔒
+                {% else %}
+                    ✅
+                {% endif %}
+            </div>
+            <div class="label">Login Status</div>
+        </div>
+    </div>
+
+    <!-- ── Security Checklist ────────────────────────── -->
+    <div class="dash-card">
+        <h2>✅ Security Checklist</h2>
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Status</th>
+                <th>Detail</th>
+            </tr>
+            <tr>
+                <td>Password Hashing</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    SHA-256 × 100,000 iterations with random salt
+                </td>
+            </tr>
+            <tr>
+                <td>RSA Data Encryption</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    All personal data encrypted with RSA public key
+                </td>
+            </tr>
+            <tr>
+                <td>Private Key Encryption</td>
+                <td>
+                    {% if user.keys_encrypted %}
+                    <span style="color:#80f080;">✅ Active</span>
+                    {% else %}
+                    <span style="color:#f08080;">❌ Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="color:#666; font-size:0.8rem;">
+                    RSA wrapped — master key derived from password
+                    via 50,000 × SHA-256 iterations (never stored)
+                </td>
+            </tr>
+            <tr>
+                <td>2FA Login</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    OTP encrypted with ECC public key
+                </td>
+            </tr>
+            <tr>
+                <td>ECC Signed Sessions</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    Session token signed with ECC private key
+                </td>
+            </tr>
+            <tr>
+                <td>Session Fingerprinting</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    IP + User Agent hashed with SHA-256
+                </td>
+            </tr>
+            <tr>
+                <td>HMAC Integrity</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    All stored data has HMAC-SHA256 verification
+                </td>
+            </tr>
+            <tr>
+                <td>Brute Force Protection</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    Locked after {{ 5 }} failed attempts for 15 min
+                </td>
+            </tr>
+            <tr>
+                <td>Concurrent Session Prevention</td>
+                <td><span style="color:#80f080;">✅ Active</span></td>
+                <td style="color:#666; font-size:0.8rem;">
+                    New login terminates all previous sessions
+                </td>
+            </tr>
+            <tr>
+                <td>Key Rotation</td>
+                <td>
+                    {% if user.last_key_rotation %}
+                    <span style="color:#80f080;">✅ Done</span>
+                    {% else %}
+                    <span style="color:#f0c080;">⚠ Never rotated</span>
+                    {% endif %}
+                </td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {% if user.last_key_rotation %}
+                        Last: {{ user.last_key_rotation|date:"M d, Y" }}
+                    {% else %}
+                        <a href="{% url 'key_management' %}"
+                           style="color:#7b8cde;">
+                            Rotate now →
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ── Recent Key Activity ───────────────────────── -->
+    <div class="dash-card">
+        <h2>
+            🔑 Recent Key Activity
+            <a href="{% url 'key_management' %}" class="btn btn-sm"
+               style="float:right; margin-top:-0.3rem;">
+                Full Log →
+            </a>
+        </h2>
+        {% if key_logs %}
+        <table>
+            <tr>
+                <th>Action</th>
+                <th>Note</th>
+                <th>Time</th>
+            </tr>
+            {% for log in key_logs %}
+            <tr>
+                <td>
+                    {% if log.action == 'login' %}
+                        <span style="color:#80c0f0;">🔓 {{ log.action }}</span>
+                    {% elif log.action == 'rotate' %}
+                        <span style="color:#f0c080;">🔄 {{ log.action }}</span>
+                    {% else %}
+                        <span style="color:#c080f0;">🔑 {{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td style="color:#888; font-size:0.8rem;">{{ log.note }}</td>
+                <td style="color:#666; font-size:0.75rem;">
+                    {{ log.timestamp|date:"M d, Y H:i" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No key activity yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Recent Session Activity ───────────────────── -->
+    <div class="dash-card">
+        <h2>
+            🔒 Recent Session Activity
+            <a href="{% url 'session_dashboard' %}" class="btn btn-sm"
+               style="float:right; margin-top:-0.3rem;">
+                Full Log →
+            </a>
+        </h2>
+        {% if session_logs %}
+        <table>
+            <tr>
+                <th>Event</th>
+                <th>IP</th>
+                <th>Note</th>
+                <th>Time</th>
+            </tr>
+            {% for log in session_logs %}
+            <tr>
+                <td>
+                    {% if log.event == 'login' %}
+                        <span style="color:#80f080;">🔓 login</span>
+                    {% elif log.event == 'logout' %}
+                        <span style="color:#888;">🔒 logout</span>
+                    {% elif log.event == 'hijack' %}
+                        <span style="color:#f08080;">⚠ hijack</span>
+                    {% elif log.event == 'expired' %}
+                        <span style="color:#f0c080;">⏱ expired</span>
+                    {% else %}
+                        {{ log.event }}
+                    {% endif %}
+                </td>
+                <td style="font-family:monospace; font-size:0.75rem;
+                           color:#666;">
+                    {{ log.ip_address|default:"—" }}
+                </td>
+                <td style="color:#888; font-size:0.78rem;">{{ log.note }}</td>
+                <td style="color:#666; font-size:0.75rem;">
+                    {{ log.timestamp|date:"M d, Y H:i" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No session events yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

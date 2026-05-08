@@ -1,0 +1,149 @@
+{% extends 'core/base.html' %}
+{% block title %}Posts{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header ────────────────────────────────────── -->
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center;">
+            <div>
+                <h2 style="border:none; padding:0;">📝 Posts</h2>
+                <p style="color:#888; font-size:0.82rem; margin-top:0.3rem;">
+                    Your posts are decrypted with your RSA private key.
+                    Other users' posts show title only.
+                </p>
+            </div>
+            <a href="{% url 'create_post' %}" class="btn btn-sm">
+                ✏ New Post
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Posts ─────────────────────────────────────── -->
+    {% if posts %}
+        {% for post in posts %}
+        <div class="dash-card" style="
+            {% if post.is_own %}border-color:#2a3a5a;{% endif %}
+        ">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between;
+                        align-items:flex-start; flex-wrap:wrap; gap:0.5rem;
+                        margin-bottom:0.8rem;">
+                <div>
+                    <h2 style="border:none; padding:0; font-size:1rem;
+                               margin-bottom:0.3rem;">
+                        {{ post.title }}
+                        {% if post.is_own %}
+                        <span style="color:#7b8cde; font-size:0.72rem;
+                                     font-weight:400;">
+                            (your post)
+                        </span>
+                        {% endif %}
+                    </h2>
+                    <p style="color:#666; font-size:0.75rem;">
+                        by
+                        <span class="badge badge-{{ post.author_role }}">
+                            {{ post.author }}
+                        </span>
+                        | {{ post.visibility }}
+                        | {{ post.created_at|date:"M d, Y H:i" }}
+                    </p>
+                </div>
+
+                {% if post.is_own %}
+                <div style="display:flex; gap:0.5rem;">
+                    <!-- Edit — only author sees this -->
+                    <a href="{% url 'edit_post' post.id %}"
+                       class="btn btn-sm"
+                       style="text-decoration:none;">
+                        ✏
+                    </a>
+                    <!-- Delete — only author sees this -->
+                    <form method="POST"
+                          action="{% url 'delete_post' post.id %}"
+                          onsubmit="return confirm('Delete this post?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-danger">
+                            🗑
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div style="
+                background:#0f0f1a;
+                border:1px solid #1a1a2e;
+                border-radius:6px;
+                padding:0.8rem;
+                margin-bottom:0.8rem;
+                font-size:0.9rem;
+                line-height:1.6;
+                color:{% if post.is_own %}#ddd{% else %}#555{% endif %};
+                {% if not post.is_own %}font-style:italic;{% endif %}
+            ">
+                {{ post.content }}
+            </div>
+
+            <!-- Integrity badges — only for own posts -->
+            {% if post.is_own %}
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                <span style="font-size:0.72rem; padding:0.2rem 0.5rem;
+                             border-radius:4px;
+                             {% if post.hmac_ok %}
+                             background:#0a1a0a; color:#80f080;
+                             border:1px solid #1a3a1a;
+                             {% else %}
+                             background:#1a0a0a; color:#f08080;
+                             border:1px solid #3a1a1a;
+                             {% endif %}">
+                    {% if post.hmac_ok %}✅ HMAC OK{% else %}❌ HMAC Failed{% endif %}
+                </span>
+                <span style="font-size:0.72rem; padding:0.2rem 0.5rem;
+                             border-radius:4px;
+                             {% if post.sig_ok %}
+                             background:#0a0f1a; color:#80c0f0;
+                             border:1px solid #1a2a3a;
+                             {% else %}
+                             background:#1a1a0a; color:#888;
+                             border:1px solid #2a2a1a;
+                             {% endif %}">
+                    {% if post.sig_ok %}✅ ECC Signed{% else %}⚠ Unverified{% endif %}
+                </span>
+                <span style="font-size:0.72rem; padding:0.2rem 0.5rem;
+                             border-radius:4px;
+                             background:#120a1a; color:#c0a0f0;
+                             border:1px solid #2a1a3a;">
+                    🔐 RSA Encrypted
+                </span>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+    <div class="dash-card">
+        <p style="color:#666;">
+            No posts yet.
+            <a href="{% url 'create_post' %}" style="color:#7b8cde;">
+                Create one →
+            </a>
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

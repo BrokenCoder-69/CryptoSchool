@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+{% block title %}Edit Post{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+<div class="card" style="max-width:640px;">
+
+    <h1>✏ Edit Post</h1>
+    <p class="subtitle">
+        Content will be re-encrypted and re-signed on save
+    </p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Post meta info -->
+    <div style="
+        background:#0f0f1a;
+        border:1px solid #2a2a4a;
+        border-radius:6px;
+        padding:0.6rem 0.8rem;
+        margin-bottom:1rem;
+        font-size:0.78rem;
+        color:#666;
+    ">
+        Originally posted by
+        <span class="badge badge-{{ post.author.role }}">
+            {{ post.author.username }}
+        </span>
+        on {{ post.created_at|date:"M d, Y H:i" }}
+    </div>
+
+    <form method="POST" action="{% url 'edit_post' post.id %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Title *</label>
+            <input type="text"
+                   name="title"
+                   value="{{ post.title }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Content *</label>
+            <textarea name="content"
+                      required
+                      style="
+                          width:100%;
+                          min-height:160px;
+                          padding:0.6rem 0.8rem;
+                          background:#0f0f1a;
+                          border:1px solid #2a2a4a;
+                          border-radius:6px;
+                          color:#e0e0e0;
+                          font-size:0.95rem;
+                          outline:none;
+                          resize:vertical;
+                          font-family:'Segoe UI', sans-serif;
+                      ">{{ current_content }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Visibility</label>
+            <select name="visibility">
+                <option value="public"
+                    {% if post.visibility == 'public' %}
+                    selected{% endif %}>
+                    Everyone
+                </option>
+                <option value="teachers"
+                    {% if post.visibility == 'teachers' %}
+                    selected{% endif %}>
+                    Teachers Only
+                </option>
+                <option value="students"
+                    {% if post.visibility == 'students' %}
+                    selected{% endif %}>
+                    Students Only
+                </option>
+                <option value="parents"
+                    {% if post.visibility == 'parents' %}
+                    selected{% endif %}>
+                    Parents Only
+                </option>
+                {% if user.role == 'admin' %}
+                <option value="admin"
+                    {% if post.visibility == 'admin' %}
+                    selected{% endif %}>
+                    Admin Only
+                </option>
+                {% endif %}
+            </select>
+        </div>
+
+        <!-- Security info -->
+        <div style="
+            background:#0a0f1a;
+            border:1px solid #1a2a3a;
+            border-radius:6px;
+            padding:0.8rem;
+            margin-bottom:1rem;
+            font-size:0.8rem;
+            color:#80c0f0;
+        ">
+            🔐 Content will be re-encrypted with each
+            recipient's RSA public key.<br>
+            🖊 Post will be re-signed with your ECC private key.<br>
+            🔒 HMAC will be recomputed for integrity.
+        </div>
+
+        <div style="display:flex; gap:0.8rem;">
+            <button type="submit" class="btn" style="flex:1;">
+                💾 Save Changes
+            </button>
+            <a href="{% url 'post_list' %}"
+               class="btn btn-danger"
+               style="flex:1; text-align:center;
+                      text-decoration:none; padding:0.6rem;">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+</div>
+</div>
+{% endblock %}

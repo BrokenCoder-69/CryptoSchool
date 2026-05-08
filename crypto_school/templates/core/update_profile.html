@@ -1,0 +1,180 @@
+{% extends 'core/base.html' %}
+{% block title %}Update Profile{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+<div class="card" style="max-width:640px;">
+
+    <h1>✏ Update Profile</h1>
+    <p class="subtitle">All sensitive data encrypted with your RSA public key</p>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- enctype needed for file upload -->
+    <form method="POST" action="{% url 'update_profile' %}"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- ── Profile Picture (student only) ───────── -->
+        {% if user.role == 'student' %}
+        <div class="form-group">
+            <label>Profile Picture</label>
+            {% if user.profile_picture %}
+            <div style="margin-bottom:0.5rem;">
+                <img src="{{ user.profile_picture.url }}"
+                     style="width:80px; height:80px; border-radius:50%;
+                            object-fit:cover; border:2px solid #2a2a4a;">
+            </div>
+            {% endif %}
+            <input type="file" name="profile_picture"
+                   accept="image/*"
+                   style="color:#aaa; font-size:0.85rem;">
+        </div>
+        {% endif %}
+
+        <!-- ── Common fields ────────────────────────── -->
+        <div style="background:#0a0f1a; border:1px solid #1a2a3a;
+                    border-radius:6px; padding:0.8rem; margin-bottom:1rem;">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.6rem;">
+                🔐 Basic Info (RSA Encrypted)
+            </p>
+
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" name="full_name"
+                       value="{{ profile.full_name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone"
+                       value="{{ profile.phone }}">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" name="address"
+                       value="{{ profile.address }}">
+            </div>
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <input type="date" name="date_of_birth"
+                       value="{{ profile.date_of_birth }}">
+            </div>
+        </div>
+
+        <!-- ── Student fields ───────────────────────── -->
+        {% if user.role == 'student' %}
+        <div style="background:#0a0f1a; border:1px solid #1a2a3a;
+                    border-radius:6px; padding:0.8rem; margin-bottom:1rem;">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.6rem;">
+                🎓 Student Information (RSA Encrypted)
+            </p>
+
+            <div class="form-group">
+                <label>Blood Group</label>
+                <select name="blood_group">
+                    <option value="">— Select —</option>
+                    {% for bg in "A+ A- B+ B- AB+ AB- O+ O-" %}{% endfor %}
+                    <option {% if profile.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                    <option {% if profile.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                    <option {% if profile.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                    <option {% if profile.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                    <option {% if profile.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                    <option {% if profile.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                    <option {% if profile.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                    <option {% if profile.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nationality</label>
+                <input type="text" name="nationality"
+                       value="{{ profile.nationality }}"
+                       placeholder="e.g. Bangladeshi">
+            </div>
+            <div class="form-group">
+                <label>Religion</label>
+                <input type="text" name="religion"
+                       value="{{ profile.religion }}"
+                       placeholder="e.g. Islam">
+            </div>
+            <div class="form-group">
+                <label>Guardian Name</label>
+                <input type="text" name="guardian_name"
+                       value="{{ profile.guardian_name }}">
+            </div>
+            <div class="form-group">
+                <label>Guardian Phone</label>
+                <input type="text" name="guardian_phone"
+                       value="{{ profile.guardian_phone }}">
+            </div>
+            <div class="form-group">
+                <label>Emergency Contact</label>
+                <input type="text" name="emergency_contact"
+                       value="{{ profile.emergency_contact }}"
+                       placeholder="Name and phone number">
+            </div>
+            <div class="form-group">
+                <label>Medical Notes</label>
+                <input type="text" name="medical_notes"
+                       value="{{ profile.medical_notes }}"
+                       placeholder="Any medical conditions, allergies etc.">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Teacher fields ───────────────────────── -->
+        {% if user.role == 'teacher' %}
+        <div style="background:#0a0f1a; border:1px solid #1a2a3a;
+                    border-radius:6px; padding:0.8rem; margin-bottom:1rem;">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.6rem;">
+                👨‍🏫 Teacher Information (RSA Encrypted)
+            </p>
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" name="subject"
+                       value="{{ profile.subject }}">
+            </div>
+            <div class="form-group">
+                <label>Qualification</label>
+                <input type="text" name="qualification"
+                       value="{{ profile.qualification }}">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ── Parent fields ────────────────────────── -->
+        {% if user.role == 'parent' %}
+        <div style="background:#0a0f1a; border:1px solid #1a2a3a;
+                    border-radius:6px; padding:0.8rem; margin-bottom:1rem;">
+            <p style="color:#7b8cde; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.6rem;">
+                👨‍👩‍👧 Parent Information (RSA Encrypted)
+            </p>
+            <div class="form-group">
+                <label>Occupation</label>
+                <input type="text" name="occupation"
+                       value="{{ profile.occupation }}">
+            </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-full">
+            🔐 Save Encrypted Profile
+        </button>
+    </form>
+
+    <div class="footer-link">
+        <a href="javascript:history.back()">← Back</a>
+    </div>
+
+</div>
+</div>
+{% endblock %}

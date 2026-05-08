@@ -1,0 +1,263 @@
+{% extends 'core/base.html' %}
+{% block title %}Add Result{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header ────────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📝 Add Student Result</h2>
+        <p style="color:#888; font-size:0.82rem;">
+            You can only add results for students in your
+            assigned classes. Marks are encrypted with the
+            student's RSA public key.
+        </p>
+    </div>
+
+    {% if no_classes %}
+    <!-- Teacher has no classes yet -->
+    <div class="dash-card" style="text-align:center; padding:2rem;">
+        <p style="font-size:2rem; margin-bottom:0.8rem;">📚</p>
+        <p style="color:#f0c080;">
+            You are not assigned to any class yet.
+        </p>
+        <p style="color:#666; font-size:0.82rem; margin-top:0.4rem;">
+            Contact the admin to get assigned to a class.
+        </p>
+    </div>
+
+    {% else %}
+
+    <!-- ── Step 1: Select Class ──────────────────────── -->
+    <div class="dash-card">
+        <h2>Step 1 — Select Your Class</h2>
+
+        <form method="POST" action="{% url 'add_result' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="load_students">
+
+            <div style="display:flex; gap:1rem;
+                        align-items:flex-end; flex-wrap:wrap;">
+                <div class="form-group" style="margin:0; flex:1;
+                                               min-width:200px;">
+                    <label>Your Assigned Classes</label>
+                    <select name="class_id" required>
+                        <option value="">— Select a class —</option>
+                        {% for cls in assigned_classes %}
+                        <option value="{{ cls.id }}"
+                            {% if selected_class and selected_class.id == cls.id %}
+                            selected
+                            {% endif %}>
+                            {{ cls.class_name }} — {{ cls.section }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-sm"
+                        style="margin-bottom:1rem;">
+                    Load Students →
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if selected_class %}
+    <!-- ── Step 2: Add Result Form ───────────────────── -->
+    <div class="dash-card">
+        <h2>
+            Step 2 — Add Result for
+            <span style="color:#7b8cde;">
+                {{ selected_class.class_name }} —
+                {{ selected_class.section }}
+            </span>
+        </h2>
+
+        {% if students %}
+
+        <form method="POST" action="{% url 'add_result' %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="submit">
+            <input type="hidden" name="class_id"
+                   value="{{ selected_class.id }}">
+
+            <div style="display:grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap:1rem;">
+
+                <!-- Student -->
+                <div class="form-group">
+                    <label>Student *</label>
+                    <select name="student_id" required>
+                        <option value="">— Select Student —</option>
+                        {% for s in students %}
+                        <option value="{{ s.id }}">
+                            {{ s.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Subject (enum) -->
+                <div class="form-group">
+                    <label>Subject *</label>
+                    <select name="subject" required>
+                        <option value="">— Select Subject —</option>
+                        {% for value, label in subject_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Exam type -->
+                <div class="form-group">
+                    <label>Exam Type *</label>
+                    <select name="exam_type" required>
+                        <option value="">— Select —</option>
+                        <option value="Quiz">Quiz</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Final">Final</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Project">Project</option>
+                        <option value="Classwork">Classwork</option>
+                        <option value="Homework">Homework</option>
+                    </select>
+                </div>
+
+                <!-- Academic Year -->
+                <div class="form-group">
+                    <label>Academic Year *</label>
+                    <select name="academic_year" required>
+                        <option value="">— Select —</option>
+                        <option value="2022-2023">2022-2023</option>
+                        <option value="2023-2024">2023-2024</option>
+                        <option value="2024-2025" selected>2024-2025</option>
+                        <option value="2025-2026">2025-2026</option>
+                    </select>
+                </div>
+
+                <!-- Marks -->
+                <div class="form-group">
+                    <label>Marks / Grade *</label>
+                    <input type="text" name="marks"
+                           placeholder="e.g. 85 or A+"
+                           required>
+                </div>
+
+                <!-- Remarks -->
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <input type="text" name="remarks"
+                           placeholder="Optional feedback">
+                </div>
+
+            </div>
+
+            <!-- Security info box -->
+            <div style="
+                background:#0a1a0a;
+                border:1px solid #1a3a1a;
+                border-radius:6px;
+                padding:0.8rem;
+                margin-bottom:1rem;
+                font-size:0.8rem;
+                color:#80f080;
+                display:flex;
+                gap:1.5rem;
+                flex-wrap:wrap;
+            ">
+                <span>🔐 Marks → RSA encrypted with student's key</span>
+                <span>🖊 Result → ECC signed with your key</span>
+                <span>🔒 HMAC → integrity verification attached</span>
+            </div>
+
+            <button type="submit" class="btn">
+                🔐 Save Encrypted Result
+            </button>
+        </form>
+
+        <!-- Students in this class -->
+        <div style="margin-top:1.5rem; padding-top:1rem;
+                    border-top:1px solid #1a1a2e;">
+            <p style="color:#666; font-size:0.75rem;
+                      text-transform:uppercase; margin-bottom:0.5rem;">
+                {{ students|length }} student(s) in this class
+            </p>
+            <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                {% for s in students %}
+                <span class="badge badge-student"
+                      style="font-size:0.72rem;">
+                    {{ s.username }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% else %}
+        <p style="color:#f0c080;">
+            No students enrolled in this class yet.
+        </p>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <!-- ── Recent Results Added ───────────────────────── -->
+    <div class="dash-card">
+        <h2>📋 Recently Added by You</h2>
+        {% with recent=user.entered_results.all %}
+        {% if recent %}
+        <table>
+            <tr>
+                <th>Student</th>
+                <th>Subject</th>
+                <th>Exam</th>
+                <th>Class</th>
+                <th>Date</th>
+            </tr>
+            {% for r in recent|slice:":10" %}
+            <tr>
+                <td>
+                    <span class="badge badge-student">
+                        {{ r.student.username }}
+                    </span>
+                </td>
+                <td style="color:#ddd;">
+                    {{ r.get_subject_display }}
+                </td>
+                <td>
+                    <span style="font-size:0.75rem;
+                                 padding:0.2rem 0.5rem;
+                                 border-radius:3px;
+                                 background:#1a1a2e;
+                                 color:#aaa;
+                                 border:1px solid #2a2a4a;">
+                        {{ r.exam_type }}
+                    </span>
+                </td>
+                <td style="color:#888; font-size:0.82rem;">
+                    {{ r.result_class }}
+                </td>
+                <td style="color:#666; font-size:0.75rem;">
+                    {{ r.created_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No results added yet.</p>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

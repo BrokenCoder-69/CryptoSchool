@@ -1,0 +1,151 @@
+{% extends 'core/base.html' %}
+{% block title %}Key Management{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Key Info ──────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔑 My Encryption Keys</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Key Version</label>
+                <p style="color:#7b8cde; font-size:1.2rem; font-weight:700;">
+                    v{{ user.key_version }}
+                </p>
+            </div>
+            <div class="info-item">
+                <label>Keys Encrypted</label>
+                <p>
+                    {% if user.keys_encrypted %}
+                        <span style="color:#80f080;">✅ Yes — stored securely</span>
+                    {% else %}
+                        <span style="color:#f08080;">
+                            ⚠ No — legacy plain storage
+                        </span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="info-item">
+                <label>Last Rotation</label>
+                <p>
+                    {% if user.last_key_rotation %}
+                        {{ user.last_key_rotation|date:"M d, Y H:i" }}
+                    {% else %}
+                        Never rotated
+                    {% endif %}
+                </p>
+            </div>
+            <div class="info-item">
+                <label>RSA Public Key (first 40 chars)</label>
+                <p style="
+                    font-family:monospace;
+                    font-size:0.72rem;
+                    color:#888;
+                    word-break:break-all;
+                ">
+                    {{ user.rsa_public_key|truncatechars:40 }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Key Rotation ──────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔄 Rotate Keys</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">
+            Rotating your keys generates a new RSA key pair and
+            re-encrypts all your data with the new keys.
+            Your password is required to authorize this action.
+        </p>
+
+        <div style="
+            background:#1f1a0a;
+            border:1px solid #4a3a1a;
+            border-radius:6px;
+            padding:0.8rem;
+            margin-bottom:1rem;
+            font-size:0.82rem;
+            color:#f0c080;
+        ">
+            ⚠ Key rotation re-encrypts all your data.
+            This may take a moment. Do not close the page.
+        </div>
+
+        <form method="POST" action="{% url 'rotate_keys' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Confirm Your Password</label>
+                <input type="password" name="password"
+                       placeholder="Enter your password to rotate keys"
+                       required>
+            </div>
+            <button type="submit" class="btn"
+                    onclick="return confirm(
+                        'Rotate your encryption keys? '
+                        + 'All data will be re-encrypted.'
+                    )">
+                🔄 Rotate Keys
+            </button>
+        </form>
+    </div>
+
+    <!-- ── Access Log ────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📋 My Key Access Log</h2>
+        {% if logs %}
+        <table>
+            <tr>
+                <th>Action</th>
+                <th>Note</th>
+                <th>IP</th>
+                <th>Time</th>
+            </tr>
+            {% for log in logs %}
+            <tr>
+                <td>
+                    {% if log.action == 'login' %}
+                        <span style="color:#80c0f0;">🔓 {{ log.action }}</span>
+                    {% elif log.action == 'rotate' %}
+                        <span style="color:#f0c080;">🔄 {{ log.action }}</span>
+                    {% else %}
+                        <span style="color:#c080f0;">🔑 {{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td style="color:#888; font-size:0.82rem;">
+                    {{ log.note }}
+                </td>
+                <td style="color:#666; font-size:0.78rem;
+                           font-family:monospace;">
+                    {{ log.ip_address|default:"—" }}
+                </td>
+                <td style="color:#666; font-size:0.78rem;">
+                    {{ log.timestamp|date:"M d, Y H:i" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No key activity logged yet.</p>
+        {% endif %}
+    </div>
+
+    {% if request.session.user_role == 'admin' %}
+    <div class="dash-card">
+        <h2>🛡 Admin</h2>
+        <a href="{% url 'admin_key_logs' %}" class="btn btn-sm">
+            View All Users Key Logs →
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

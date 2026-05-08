@@ -1,0 +1,17 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Pending Approval — Crypto School{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align:center;">
+    <h1>⏳ Pending Approval</h1>
+    <p class="subtitle" style="margin-top:1rem; font-size:1rem; color:#ccc;">
+        Your teacher account has been created successfully.<br><br>
+        An admin must approve your account before you can log in.<br>
+        Please check back later.
+    </p>
+    <div class="footer-link" style="margin-top:2rem;">
+        <a href="{% url 'login' %}">Go to Login</a>
+    </div>
+</div>
+{% endblock %}

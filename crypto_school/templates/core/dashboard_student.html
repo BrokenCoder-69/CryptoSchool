@@ -1,0 +1,150 @@
+{% extends 'core/base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Welcome ───────────────────────────────────── -->
+    <div class="dash-card">
+        <!-- Profile picture -->
+        {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}"
+             style="width:70px; height:70px; border-radius:50%;
+                    object-fit:cover; border:2px solid #7b8cde;
+                    float:right; margin-left:1rem;">
+        {% endif %}
+        <h2>👋 Welcome, {{ profile.full_name|default:user.username }}</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:1rem;">
+            Student Dashboard
+            {% if not user.profile_complete %}
+            — <a href="{% url 'update_profile' %}" style="color:#f0a050;">
+                ⚠ Complete your profile
+            </a>
+            {% endif %}
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            <a href="{% url 'my_results' %}"      class="btn btn-sm">📊 My Results</a>
+            <a href="{% url 'update_profile' %}"  class="btn btn-sm">✏ Edit Profile</a>
+            <a href="{% url 'key_management' %}"  class="btn btn-sm">🔑 My Keys</a>
+        </div>
+    </div>
+
+    <!-- ── Profile Info ──────────────────────────────── -->
+    <div class="dash-card">
+        <h2>🔐 My Encrypted Profile</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Full Name</label>
+                <p>{{ profile.full_name|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Email</label>
+                <p>{{ profile.email|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Phone</label>
+                <p>{{ profile.phone|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Date of Birth</label>
+                <p>{{ profile.date_of_birth|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Address</label>
+                <p>{{ profile.address|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Guardian Name</label>
+                <p>{{ profile.guardian_name|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Guardian Phone</label>
+                <p>{{ profile.guardian_phone|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Key Version</label>
+                <p style="color:#7b8cde;">v{{ user.key_version }}</p>
+            </div>
+            <div class="info-item">
+                <label>Blood Group</label>
+                <p>{{ profile.blood_group|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Nationality</label>
+                <p>{{ profile.nationality|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Religion</label>
+                <p>{{ profile.religion|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Emergency Contact</label>
+                <p>{{ profile.emergency_contact|default:"—" }}</p>
+            </div>
+            <div class="info-item">
+                <label>Medical Notes</label>
+                <p>{{ profile.medical_notes|default:"—" }}</p>
+            </div>
+
+
+
+
+
+        </div>
+    </div>
+
+    <!-- ── My Classes ────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📚 My Classes</h2>
+        {% if enrollments %}
+        <table>
+            <tr>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Enrolled</th>
+                <th></th>
+            </tr>
+            {% for e in enrollments %}
+            <tr>
+                <td>{{ e.enrolled_class.class_name }}</td>
+                <td>{{ e.enrolled_class.section }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ e.enrolled_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <a href="{% url 'student_class_detail' e.enrolled_class.id %}"
+                       class="btn btn-sm">View →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">Not enrolled in any class yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Recent Results preview ────────────────────── -->
+    <div class="dash-card">
+        <h2>
+            📊 My Results
+            <a href="{% url 'my_results' %}" class="btn btn-sm"
+               style="float:right; margin-top:-0.3rem;">
+                View All →
+            </a>
+        </h2>
+        <p style="color:#666; font-size:0.85rem;">
+            Results are encrypted with your RSA public key.
+            Only you can decrypt them.
+        </p>
+    </div>
+
+</div>
+{% endblock %}

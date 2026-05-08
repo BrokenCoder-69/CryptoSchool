@@ -1,0 +1,316 @@
+{% extends 'core/base.html' %}
+{% block title %}Encryption Audit{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <div class="dash-card">
+        <h2>🔬 Encryption Audit — Live DB vs Decrypted</h2>
+        <p style="color:#f0a050; font-size:0.85rem;">
+            ⚠ Development tool only. Remove before production.
+            This page proves all sensitive data is encrypted in DB.
+        </p>
+    </div>
+
+    {% for entry in audit_data %}
+    <div class="dash-card">
+
+        <!-- ── User Header ───────────────────────────── -->
+        <div style="display:flex; align-items:center;
+                    gap:0.8rem; margin-bottom:1.2rem;">
+            <span class="badge badge-{{ entry.user.role }}"
+                  style="font-size:0.9rem; padding:0.3rem 0.7rem;">
+                {{ entry.user.username }}
+            </span>
+            <span style="color:#666; font-size:0.8rem;">
+                Role: {{ entry.user.role }}
+                | Keys encrypted:
+                {% if entry.user.keys_encrypted %}
+                    <span style="color:#80f080;">✅ YES</span>
+                {% else %}
+                    <span style="color:#f08080;">❌ NO</span>
+                {% endif %}
+                | Key version: v{{ entry.user.key_version }}
+            </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+            <!-- ── RAW DB VALUES (left column) ───────── -->
+            <div>
+                <p style="color:#f08080; font-size:0.78rem;
+                          text-transform:uppercase; font-weight:700;
+                          margin-bottom:0.6rem; letter-spacing:0.05em;">
+                    🗄 Raw DB Values (what attacker sees)
+                </p>
+
+                <!-- Password hash proof -->
+                <div style="margin-bottom:0.8rem;">
+                    <p style="color:#666; font-size:0.72rem;
+                              text-transform:uppercase;">
+                        Password Hash
+                    </p>
+                    <p style="
+                        font-family:monospace;
+                        font-size:0.72rem;
+                        color:#f08080;
+                        background:#1a0a0a;
+                        padding:0.4rem;
+                        border-radius:4px;
+                        word-break:break-all;
+                        border:1px solid #3a1a1a;
+                    ">
+                        {{ entry.raw.password_hash }}
+                    </p>
+                </div>
+
+                <!-- RSA private key proof -->
+                <div style="margin-bottom:0.8rem;">
+                    <p style="color:#666; font-size:0.72rem;
+                              text-transform:uppercase;">
+                        RSA Private Key (in DB)
+                    </p>
+                    <p style="
+                        font-family:monospace;
+                        font-size:0.72rem;
+                        color:#f0a050;
+                        background:#1a0f0a;
+                        padding:0.4rem;
+                        border-radius:4px;
+                        word-break:break-all;
+                        border:1px solid #3a2a1a;
+                    ">
+                        {{ entry.raw.rsa_private_key }}
+                    </p>
+                    {% if entry.user.keys_encrypted %}
+                    <p style="color:#80f080; font-size:0.7rem;">
+                        ✅ Encrypted with password-derived key
+                    </p>
+                    {% else %}
+                    <p style="color:#f08080; font-size:0.7rem;">
+                        ❌ Plain text — needs migration
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Encrypted name proof -->
+                <div style="margin-bottom:0.8rem;">
+                    <p style="color:#666; font-size:0.72rem;
+                              text-transform:uppercase;">
+                        Encrypted Full Name (RSA ciphertext)
+                    </p>
+                    <p style="
+                        font-family:monospace;
+                        font-size:0.65rem;
+                        color:#c0a0f0;
+                        background:#120a1a;
+                        padding:0.4rem;
+                        border-radius:4px;
+                        word-break:break-all;
+                        border:1px solid #2a1a3a;
+                    ">
+                        {{ entry.raw.encrypted_name }}
+                    </p>
+                </div>
+
+                <!-- Encrypted email proof -->
+                <div style="margin-bottom:0.8rem;">
+                    <p style="color:#666; font-size:0.72rem;
+                              text-transform:uppercase;">
+                        Encrypted Email (RSA ciphertext)
+                    </p>
+                    <p style="
+                        font-family:monospace;
+                        font-size:0.65rem;
+                        color:#c0a0f0;
+                        background:#120a1a;
+                        padding:0.4rem;
+                        border-radius:4px;
+                        word-break:break-all;
+                        border:1px solid #2a1a3a;
+                    ">
+                        {{ entry.raw.encrypted_email }}
+                    </p>
+                </div>
+
+                <!-- Encrypted phone proof -->
+                {% if entry.raw.encrypted_phone != '—' %}
+                <div style="margin-bottom:0.8rem;">
+                    <p style="color:#666; font-size:0.72rem;
+                              text-transform:uppercase;">
+                        Encrypted Phone (RSA ciphertext)
+                    </p>
+                    <p style="
+                        font-family:monospace;
+                        font-size:0.65rem;
+                        color:#c0a0f0;
+                        background:#120a1a;
+                        padding:0.4rem;
+                        border-radius:4px;
+                        word-break:break-all;
+                        border:1px solid #2a1a3a;
+                    ">
+                        {{ entry.raw.encrypted_phone }}
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- ── DECRYPTED VALUES (right column) ───── -->
+            <div>
+                <p style="color:#80f080; font-size:0.78rem;
+                          text-transform:uppercase; font-weight:700;
+                          margin-bottom:0.6rem; letter-spacing:0.05em;">
+                    🔓 Decrypted Values (after RSA decryption)
+                </p>
+
+                <div style="
+                    background:#0a1a0a;
+                    border:1px solid #1a3a1a;
+                    border-radius:6px;
+                    padding:0.8rem;
+                    margin-bottom:0.8rem;
+                ">
+                    <p style="color:#555; font-size:0.7rem;
+                              margin-bottom:0.6rem;">
+                        Key source: {{ entry.decrypted.source }}
+                    </p>
+
+                    {% if entry.decrypted.full_name %}
+                    <div style="margin-bottom:0.5rem;">
+                        <span style="color:#666; font-size:0.72rem;
+                                     text-transform:uppercase;">
+                            Full Name:
+                        </span>
+                        <span style="color:#80f080; font-size:0.9rem;
+                                     margin-left:0.5rem;">
+                            {{ entry.decrypted.full_name }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if entry.decrypted.email %}
+                    <div style="margin-bottom:0.5rem;">
+                        <span style="color:#666; font-size:0.72rem;
+                                     text-transform:uppercase;">
+                            Email:
+                        </span>
+                        <span style="color:#80f080; font-size:0.9rem;
+                                     margin-left:0.5rem;">
+                            {{ entry.decrypted.email }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if entry.decrypted.phone %}
+                    <div style="margin-bottom:0.5rem;">
+                        <span style="color:#666; font-size:0.72rem;
+                                     text-transform:uppercase;">
+                            Phone:
+                        </span>
+                        <span style="color:#80f080; font-size:0.9rem;
+                                     margin-left:0.5rem;">
+                            {{ entry.decrypted.phone }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if entry.decrypted.error %}
+                    <p style="color:#f08080; font-size:0.82rem;">
+                        Error: {{ entry.decrypted.error }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- The key proof statement -->
+                <div style="
+                    background:#0a0f1a;
+                    border:1px solid #1a2a3a;
+                    border-radius:6px;
+                    padding:0.8rem;
+                    font-size:0.78rem;
+                ">
+                    <p style="color:#7b8cde; font-weight:700;
+                              margin-bottom:0.4rem;">
+                        🔐 Encryption Proof
+                    </p>
+
+                    <!-- Prove RSA numbers look nothing like the original -->
+                    <p style="color:#888; line-height:1.6;">
+                        The ciphertext on the left is a comma-separated
+                        list of large integers — each character of the
+                        original string was converted to its ASCII value
+                        then raised to the power of
+                        <span style="color:#7b8cde; font-family:monospace;">
+                            e=65537
+                        </span>
+                        modulo
+                        <span style="color:#7b8cde; font-family:monospace;">
+                            n
+                        </span>
+                        (RSA public key modulus).
+                        Without the private key exponent
+                        <span style="color:#7b8cde; font-family:monospace;">d</span>,
+                        this is computationally irreversible.
+                    </p>
+
+                    {% if entry.user.keys_encrypted %}
+                    <p style="color:#80f080; margin-top:0.6rem;">
+                        ✅ Private key itself is also encrypted in DB
+                        using XOR with a key derived from the user's
+                        password via 100,000 iterations of SHA-256.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- ── Summary ───────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📊 Encryption Summary</h2>
+        <table>
+            <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Data Encrypted</th>
+                <th>Private Key Encrypted</th>
+                <th>Key Version</th>
+            </tr>
+            {% for entry in audit_data %}
+            <tr>
+                <td>{{ entry.user.username }}</td>
+                <td>
+                    <span class="badge badge-{{ entry.user.role }}">
+                        {{ entry.user.role }}
+                    </span>
+                </td>
+                <td>
+                    {% if entry.user.encrypted_full_name %}
+                        <span style="color:#80f080;">✅ Yes (RSA)</span>
+                    {% else %}
+                        <span style="color:#f08080;">❌ No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if entry.user.keys_encrypted %}
+                        <span style="color:#80f080;">
+                            ✅ Yes (SHA-256 derived XOR)
+                        </span>
+                    {% else %}
+                        <span style="color:#f08080;">❌ Plain text</span>
+                    {% endif %}
+                </td>
+                <td style="color:#7b8cde;">
+                    v{{ entry.user.key_version }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+{% endblock %}

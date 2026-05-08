@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+{% block title %}Class Detail — Admin{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Class Header ──────────────────────────────── -->
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center;">
+            <div>
+                <h2 style="border:none; padding:0; font-size:1.4rem;">
+                    📚 {{ cls.class_name }} — {{ cls.section }}
+                </h2>
+                <span style="color:#666; font-size:0.8rem;">
+                    Created {{ cls.created_at|date:"M d, Y" }}
+                </span>
+            </div>
+            <a href="{% url 'all_classes' %}" class="btn btn-sm">
+                ← All Classes
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Assigned Teachers ─────────────────────────── -->
+    <div class="dash-card">
+        <h2>👨‍🏫 Assigned Teachers ({{ teacher_assignments.count }})</h2>
+        {% if teacher_assignments %}
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Assigned</th>
+                <th>Action</th>
+            </tr>
+            {% for ta in teacher_assignments %}
+            <tr>
+                <td>
+                    <span class="badge badge-teacher">
+                        {{ ta.teacher.username }}
+                    </span>
+                </td>
+                <td style="color:#888;">{{ ta.teacher.email }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ ta.assigned_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <form method="POST"
+                          action="{% url 'remove_teacher_from_class' ta.id %}"
+                          onsubmit="return confirm('Remove this teacher?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-danger">
+                            ✕ Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No teachers assigned to this class.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Enrolled Students ─────────────────────────── -->
+    <div class="dash-card">
+        <h2>🎓 Enrolled Students ({{ enrollments.count }})</h2>
+        {% if enrollments %}
+        <table>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Enrolled</th>
+                <th>Action</th>
+            </tr>
+            {% for en in enrollments %}
+            <tr>
+                <td>
+                    <span class="badge badge-student">
+                        {{ en.student.username }}
+                    </span>
+                </td>
+                <td style="color:#888;">{{ en.student.email }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ en.enrolled_at|date:"M d, Y" }}
+                </td>
+                <td>
+                    <form method="POST"
+                          action="{% url 'remove_student_from_class' en.id %}"
+                          onsubmit="return confirm('Remove this student?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-sm btn-danger">
+                            ✕ Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No students enrolled in this class.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

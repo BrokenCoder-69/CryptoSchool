@@ -1,0 +1,76 @@
+{% extends 'core/base.html' %}
+{% block title %}My Class — Student{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    <div class="dash-card">
+        <div style="display:flex; justify-content:space-between;
+                    align-items:center;">
+            <h2 style="border:none; padding:0; font-size:1.4rem;">
+                📚 {{ cls.class_name }} — {{ cls.section }}
+            </h2>
+            <a href="{% url 'dashboard_student' %}" class="btn btn-sm">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- ── My Teachers ───────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👨‍🏫 My Teachers</h2>
+        {% if teacher_data %}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Subject</th>
+                <th>Since</th>
+            </tr>
+            {% for t in teacher_data %}
+            <tr>
+                <td>{{ t.full_name }}</td>
+                <td>
+                    <span class="badge badge-teacher">
+                        {{ t.username }}
+                    </span>
+                </td>
+                <td style="color:#aaa;">{{ t.subject }}</td>
+                <td style="color:#666; font-size:0.8rem;">
+                    {{ t.assigned_at|date:"M d, Y" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No teachers assigned yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- ── Classmates ────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>👥 My Classmates ({{ classmate_data|length }})</h2>
+        {% if classmate_data %}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+            </tr>
+            {% for c in classmate_data %}
+            <tr>
+                <td>{{ c.full_name }}</td>
+                <td>
+                    <span class="badge badge-student">
+                        {{ c.username }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:#666;">No other students enrolled yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

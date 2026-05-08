@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+{% block title %}All Classes — Admin{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="dash-card">
+        <h2>📚 All Classes Overview</h2>
+        <a href="{% url 'dashboard_admin' %}" class="btn btn-sm"
+           style="float:right; margin-top:-0.5rem;">
+            ← Admin Dashboard
+        </a>
+    </div>
+
+    {% if class_summaries %}
+        {% for summary in class_summaries %}
+        <div class="dash-card">
+
+            <!-- ── Class Header ──────────────────────── -->
+            <div style="display:flex; justify-content:space-between;
+                        align-items:center; margin-bottom:1rem;">
+                <div>
+                    <h2 style="margin:0; border:none; padding:0;">
+                        {{ summary.cls.class_name }} — {{ summary.cls.section }}
+                    </h2>
+                    <span style="color:#666; font-size:0.8rem;">
+                        Created {{ summary.cls.created_at|date:"M d, Y" }}
+                        {% if summary.cls.created_by %}
+                            by {{ summary.cls.created_by.username }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                    <!-- View detail button -->
+                    <a href="{% url 'class_detail' summary.cls.id %}"
+                       class="btn btn-sm">🔍 Details</a>
+                    <!-- Delete class button -->
+                    <form method="POST"
+                          action="{% url 'delete_class' summary.cls.id %}"
+                          onsubmit="return confirm('Delete this class?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            🗑 Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── Stats row ─────────────────────────── -->
+            <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                <div class="stat-box" style="padding:0.6rem 1rem;">
+                    <div class="num" style="font-size:1.4rem;">
+                        {{ summary.teacher_count }}
+                    </div>
+                    <div class="label">Teachers</div>
+                </div>
+                <div class="stat-box" style="padding:0.6rem 1rem;">
+                    <div class="num" style="font-size:1.4rem;">
+                        {{ summary.student_count }}
+                    </div>
+                    <div class="label">Students</div>
+                </div>
+            </div>
+
+            <!-- ── Teachers ──────────────────────────── -->
+            <p style="color:#7b8cde; font-size:0.8rem;
+                      text-transform:uppercase; margin-bottom:0.4rem;">
+                👨‍🏫 Assigned Teachers
+            </p>
+            {% if summary.teachers %}
+                {% for ta in summary.teachers %}
+                <span class="badge badge-teacher" style="margin-right:0.4rem;">
+                    {{ ta.teacher.username }}
+                </span>
+                {% endfor %}
+            {% else %}
+                <span style="color:#666; font-size:0.85rem;">
+                    No teachers assigned
+                </span>
+            {% endif %}
+
+            <br><br>
+
+            <!-- ── Students ──────────────────────────── -->
+            <p style="color:#7b8cde; font-size:0.8rem;
+                      text-transform:uppercase; margin-bottom:0.4rem;">
+                🎓 Enrolled Students
+            </p>
+            {% if summary.students %}
+                {% for en in summary.students %}
+                <span class="badge badge-student" style="margin-right:0.4rem;">
+                    {{ en.student.username }}
+                </span>
+                {% endfor %}
+            {% else %}
+                <span style="color:#666; font-size:0.85rem;">
+                    No students enrolled
+                </span>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="dash-card">
+            <p style="color:#666;">No classes created yet.</p>
+            <a href="{% url 'dashboard_admin' %}" class="btn btn-sm"
+               style="margin-top:1rem; display:inline-block;">
+                Go create one
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

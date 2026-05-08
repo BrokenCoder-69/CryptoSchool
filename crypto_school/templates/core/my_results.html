@@ -1,0 +1,508 @@
+{% extends 'core/base.html' %}
+{% block title %}Academic Results{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for msg in messages %}
+            <li class="{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── Header Card ───────────────────────────────── -->
+    <div class="dash-card" style="
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid #7b8cde;
+        position: relative;
+        overflow: hidden;
+    ">
+        <!-- Decorative background text -->
+        <div style="
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            font-size: 8rem;
+            color: rgba(123,140,222,0.05);
+            font-weight: 900;
+            line-height: 1;
+            pointer-events: none;
+            user-select: none;
+        ">RESULTS</div>
+
+        <div style="display:flex; justify-content:space-between;
+                    align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <!-- School name -->
+                <p style="
+                    color:#7b8cde;
+                    font-size:0.72rem;
+                    text-transform:uppercase;
+                    letter-spacing:0.15em;
+                    margin-bottom:0.3rem;
+                ">
+                    🔐 Crypto School — Official Academic Record
+                </p>
+
+                <!-- Student name -->
+                <h1 style="
+                    color:#ffffff;
+                    font-size:1.5rem;
+                    margin-bottom:0.2rem;
+                ">
+                    {{ profile.full_name|default:user.username }}
+                </h1>
+
+                <!-- Meta info -->
+                <p style="color:#888; font-size:0.82rem;">
+                    Student ID: <span style="color:#aaa;">
+                        {{ user.username }}
+                    </span>
+                    &nbsp;|&nbsp;
+                    Role: <span class="badge badge-student">student</span>
+                </p>
+            </div>
+
+            <!-- Profile picture if exists -->
+            {% if user.profile_picture %}
+            <img src="{{ user.profile_picture.url }}"
+                 style="
+                     width:70px; height:70px;
+                     border-radius:8px;
+                     object-fit:cover;
+                     border:2px solid #7b8cde;
+                 ">
+            {% else %}
+            <div style="
+                width:70px; height:70px;
+                border-radius:8px;
+                background:#0f0f1a;
+                border:2px solid #2a2a4a;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:2rem;
+            ">🎓</div>
+            {% endif %}
+        </div>
+
+        <!-- Stats row -->
+        <div style="
+            display:flex;
+            gap:1.5rem;
+            margin-top:1.2rem;
+            padding-top:1rem;
+            border-top:1px solid #2a2a4a;
+            flex-wrap:wrap;
+        ">
+            <div>
+                <p style="color:#666; font-size:0.7rem;
+                          text-transform:uppercase;">
+                    Total Results
+                </p>
+                <p style="color:#7b8cde; font-size:1.4rem;
+                          font-weight:700;">
+                    {{ results|length }}
+                </p>
+            </div>
+            <div>
+                <p style="color:#666; font-size:0.7rem;
+                          text-transform:uppercase;">
+                    Encryption
+                </p>
+                <p style="color:#80f080; font-size:0.9rem;
+                          font-weight:700;">
+                    RSA Protected
+                </p>
+            </div>
+            <div>
+                <p style="color:#666; font-size:0.7rem;
+                          text-transform:uppercase;">
+                    Integrity
+                </p>
+                <p style="color:#80c0f0; font-size:0.9rem;
+                          font-weight:700;">
+                    HMAC Verified
+                </p>
+            </div>
+            <div>
+                <p style="color:#666; font-size:0.7rem;
+                          text-transform:uppercase;">
+                    Authenticity
+                </p>
+                <p style="color:#c080f0; font-size:0.9rem;
+                          font-weight:700;">
+                    ECC Signed
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if results %}
+
+        <!-- ── Group results by academic year ────────── -->
+        {% regroup results by academic_year as year_groups %}
+
+        {% for year_group in year_groups %}
+        <div class="dash-card">
+
+            <!-- Year header -->
+            <div style="
+                display:flex;
+                align-items:center;
+                gap:0.8rem;
+                margin-bottom:1.2rem;
+                padding-bottom:0.8rem;
+                border-bottom:1px solid #2a2a4a;
+            ">
+                <div style="
+                    background:#7b8cde;
+                    color:#0f0f1a;
+                    padding:0.3rem 0.8rem;
+                    border-radius:4px;
+                    font-size:0.82rem;
+                    font-weight:700;
+                ">
+                    {{ year_group.grouper }}
+                </div>
+                <p style="color:#666; font-size:0.8rem;">
+                    {{ year_group.list|length }} result(s)
+                </p>
+            </div>
+
+            <!-- Results table -->
+            <table style="border-collapse:collapse; width:100%;">
+                <thead>
+                    <tr style="background:#12122a;">
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:left;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Subject</th>
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:left;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Exam Type</th>
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:left;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Class</th>
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:left;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Entered By</th>
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:center;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Marks</th>
+                        <th style="
+                            padding:0.7rem 1rem;
+                            text-align:center;
+                            color:#7b8cde;
+                            font-size:0.72rem;
+                            text-transform:uppercase;
+                            letter-spacing:0.05em;
+                            border-bottom:2px solid #7b8cde;
+                        ">Security</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in year_group.list %}
+                    <tr style="
+                        border-bottom:1px solid #1a1a2e;
+                        transition: background 0.15s;
+                    "
+                    onmouseover="this.style.background='#1f1f3a'"
+                    onmouseout="this.style.background='transparent'">
+
+                        <!-- Subject -->
+                        <td style="padding:0.8rem 1rem;">
+                            <p style="color:#ddd; font-weight:600;
+                                      font-size:0.9rem;">
+                                {{ r.subject }}
+                            </p>
+                            {% if r.remarks != '—' %}
+                            <p style="color:#666; font-size:0.72rem;
+                                      margin-top:0.2rem; font-style:italic;">
+                                {{ r.remarks }}
+                            </p>
+                            {% endif %}
+                        </td>
+
+                        <!-- Exam type -->
+                        <td style="padding:0.8rem 1rem;">
+                            <span style="
+                                padding:0.25rem 0.6rem;
+                                border-radius:4px;
+                                font-size:0.75rem;
+                                font-weight:600;
+                                {% if r.exam_type == 'Final' %}
+                                    background:#1a2a1a; color:#80f080;
+                                    border:1px solid #2a4a2a;
+                                {% elif r.exam_type == 'Midterm' %}
+                                    background:#1a1a2a; color:#80c0f0;
+                                    border:1px solid #2a2a4a;
+                                {% elif r.exam_type == 'Quiz' %}
+                                    background:#2a1a2a; color:#c080f0;
+                                    border:1px solid #4a2a4a;
+                                {% elif r.exam_type == 'Assignment' %}
+                                    background:#2a2a1a; color:#f0f080;
+                                    border:1px solid #4a4a2a;
+                                {% else %}
+                                    background:#1a2a2a; color:#80f0f0;
+                                    border:1px solid #2a4a4a;
+                                {% endif %}
+                            ">
+                                {{ r.exam_type }}
+                            </span>
+                        </td>
+
+                        <!-- Class -->
+                        <td style="padding:0.8rem 1rem;
+                                   color:#888; font-size:0.82rem;">
+                            {{ r.class_name }}
+                        </td>
+
+                        <!-- Entered by -->
+                        <td style="padding:0.8rem 1rem;">
+                            <span class="badge badge-teacher"
+                                  style="font-size:0.72rem;">
+                                {{ r.entered_by }}
+                            </span>
+                            <p style="color:#666; font-size:0.7rem;
+                                      margin-top:0.2rem;">
+                                {{ r.created_at|date:"M d, Y" }}
+                            </p>
+                        </td>
+
+                        <!-- Marks — highlighted -->
+                        <td style="padding:0.8rem 1rem; text-align:center;">
+                            <div style="
+                                display:inline-block;
+                                min-width:60px;
+                                padding:0.4rem 0.8rem;
+                                border-radius:8px;
+                                font-size:1.3rem;
+                                font-weight:700;
+                                font-family:monospace;
+                                {% if r.marks|add:'0' >= 90 %}
+                                    background:#0a1a0a;
+                                    color:#80f080;
+                                    border:2px solid #2a5a2a;
+                                {% elif r.marks|add:'0' >= 75 %}
+                                    background:#0a0f1a;
+                                    color:#80c0f0;
+                                    border:2px solid #1a2a4a;
+                                {% elif r.marks|add:'0' >= 60 %}
+                                    background:#1a1a0a;
+                                    color:#f0f080;
+                                    border:2px solid #3a3a1a;
+                                {% else %}
+                                    background:#1a0a0a;
+                                    color:#f08080;
+                                    border:2px solid #3a1a1a;
+                                {% endif %}
+                            ">
+                                {{ r.marks }}
+                            </div>
+                        </td>
+
+                        <!-- Security badges -->
+                        <td style="padding:0.8rem 1rem; text-align:center;">
+                            <div style="display:flex; flex-direction:column;
+                                        gap:0.3rem; align-items:center;">
+
+                                <!-- HMAC badge -->
+                                <span style="
+                                    font-size:0.65rem;
+                                    padding:0.15rem 0.4rem;
+                                    border-radius:3px;
+                                    white-space:nowrap;
+                                    {% if r.hmac_valid %}
+                                        background:#0a1a0a; color:#80f080;
+                                        border:1px solid #1a3a1a;
+                                    {% else %}
+                                        background:#1a0a0a; color:#f08080;
+                                        border:1px solid #3a1a1a;
+                                    {% endif %}
+                                ">
+                                    {% if r.hmac_valid %}✅ HMAC{% else %}❌ HMAC{% endif %}
+                                </span>
+
+                                <!-- Signature badge -->
+                                <span style="
+                                    font-size:0.65rem;
+                                    padding:0.15rem 0.4rem;
+                                    border-radius:3px;
+                                    white-space:nowrap;
+                                    {% if r.sig_valid %}
+                                        background:#0a0f1a; color:#80c0f0;
+                                        border:1px solid #1a2a3a;
+                                    {% else %}
+                                        background:#1a1a0a; color:#888;
+                                        border:1px solid #2a2a1a;
+                                    {% endif %}
+                                ">
+                                    {% if r.sig_valid %}✅ ECC{% else %}⚠ ECC{% endif %}
+                                </span>
+
+                                <!-- RSA badge always shown -->
+                                <span style="
+                                    font-size:0.65rem;
+                                    padding:0.15rem 0.4rem;
+                                    border-radius:3px;
+                                    white-space:nowrap;
+                                    background:#120a1a;
+                                    color:#c0a0f0;
+                                    border:1px solid #2a1a3a;
+                                ">
+                                    🔐 RSA
+                                </span>
+
+                            </div>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Year summary footer -->
+            <div style="
+                margin-top:1rem;
+                padding-top:0.8rem;
+                border-top:1px solid #1a1a2e;
+                display:flex;
+                gap:2rem;
+                flex-wrap:wrap;
+            ">
+                {% with year_group.list as yr %}
+
+                <!-- Count by exam type -->
+                <div>
+                    <p style="color:#666; font-size:0.7rem;
+                              text-transform:uppercase; margin-bottom:0.3rem;">
+                        Breakdown
+                    </p>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        {% for r in yr %}
+                        <span style="
+                            font-size:0.7rem;
+                            padding:0.15rem 0.4rem;
+                            border-radius:3px;
+                            background:#1a1a2e;
+                            color:#888;
+                            border:1px solid #2a2a4a;
+                        ">
+                            {{ r.subject }}: {{ r.marks }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% endwith %}
+            </div>
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+    <!-- No results state -->
+    <div class="dash-card" style="text-align:center; padding:3rem;">
+        <div style="font-size:4rem; margin-bottom:1rem;">📊</div>
+        <h2 style="border:none; padding:0; color:#666; font-size:1rem;">
+            No Results Yet
+        </h2>
+        <p style="color:#555; font-size:0.85rem; margin-top:0.5rem;">
+            Your academic results will appear here once
+            your teacher adds them to the system.
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- ── Legend ─────────────────────────────────────── -->
+    <div class="dash-card">
+        <h2>📖 Result Legend</h2>
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="
+                    width:36px; height:24px; border-radius:4px;
+                    background:#0a1a0a; border:2px solid #2a5a2a;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.7rem; color:#80f080; font-weight:700;
+                ">90+</div>
+                <span style="color:#888; font-size:0.8rem;">Excellent</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="
+                    width:36px; height:24px; border-radius:4px;
+                    background:#0a0f1a; border:2px solid #1a2a4a;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.7rem; color:#80c0f0; font-weight:700;
+                ">75+</div>
+                <span style="color:#888; font-size:0.8rem;">Good</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="
+                    width:36px; height:24px; border-radius:4px;
+                    background:#1a1a0a; border:2px solid #3a3a1a;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.7rem; color:#f0f080; font-weight:700;
+                ">60+</div>
+                <span style="color:#888; font-size:0.8rem;">Average</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div style="
+                    width:36px; height:24px; border-radius:4px;
+                    background:#1a0a0a; border:2px solid #3a1a1a;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.7rem; color:#f08080; font-weight:700;
+                ">&lt;60</div>
+                <span style="color:#888; font-size:0.8rem;">Needs Work</span>
+            </div>
+            <div style="
+                margin-left:auto;
+                display:flex;
+                align-items:center;
+                gap:0.5rem;
+            ">
+                <span style="font-size:0.72rem; padding:0.15rem 0.4rem;
+                             border-radius:3px; background:#120a1a;
+                             color:#c0a0f0; border:1px solid #2a1a3a;">
+                    🔐 RSA
+                </span>
+                <span style="color:#666; font-size:0.75rem;">
+                    All marks encrypted in DB
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
